@@ -25,7 +25,7 @@ def create_connection(db_file):
     
 # end of fun
 ########################################################################################################
-# Commands
+# !game
 def get_game(args):
     # get the game name or console
     game = ''
@@ -48,13 +48,11 @@ def get_game(args):
             else:
                 # find where it ends and add it to game
                 if start == False: # get the slice at the start so we dont get a '
-                    # game += args[0][1:]
                     game += args[0]
                     game += ' ' 
                     start = True
                     counter += 1
                 elif start == True and args[i].find('\'') != -1: # found the end
-                    # game += args[i][:-1]
                     game += args[i]
                     counter += 1
                     end = True
@@ -63,29 +61,29 @@ def get_game(args):
                     game += ' ' # need a space
                     counter += 1
     # end of else
+    
     # check for console
     if counter < len(args):
         console = args[len(args) - 1]
-
     console = '\'' + console + '\''
-    print(game, "a")
 
     # get database cur
     cur = dbcon.cursor()
-    
+    print(len(console))
     # do the sql query
-    if len(console) == 0:
-        game = game[1:-1]
-        cur.execute("""SELECT title, console, genre, publisher FROM games WHERE title='%s'""" % (game,) )
+    if len(console) == 2: # because console will always have '' in it
+        print('\nhere\n')
+        cur.execute("""SELECT title, console, genre, publisher FROM games WHERE title=%s""" % game)
     else:
         # we got a console
         cur.execute("""SELECT title, console, genre, publisher FROM games WHERE title=%s AND console=%s""" % (game, console) )
     
     # get the query results
     retstring = cur.fetchone()
-    print(retstring)
+    
     # close cur
     cur.close()
     # return string
     return retstring
 # end of function
+########################################################################################################

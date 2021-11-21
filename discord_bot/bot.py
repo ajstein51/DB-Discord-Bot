@@ -35,7 +35,8 @@ async def help(ctx):
   
   # send a message about cmds
   await ctx.send(embed=embed)
-# end of help
+# end of
+# help
 
 ########################################################################################################
 # Commands
@@ -45,9 +46,7 @@ async def game(ctx, *args):
   # check if we got args
   if args:
     output = cmd.get_game(args)
-    # if len(output) == 0:
-    #       await ctx.send("")
-    # await ctx.send("Title: "+output[0]+", Console: "+output[1]+", Genre: "+output[2]+", Publisher: "+output[3])
+    await ctx.send("Title: "+output[0]+", Console: "+output[1]+", Genre: "+output[2]+", Publisher: "+output[3])
   else:
     await ctx.send("Missing game name")
 # end of game cmd
