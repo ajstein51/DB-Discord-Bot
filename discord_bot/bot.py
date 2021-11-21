@@ -46,7 +46,13 @@ async def game(ctx, *args):
   # check if we got args
   if args:
     output = cmd.get_game(args)
-    await ctx.send("Title: "+output[0]+", Console: "+output[1]+", Genre: "+output[2]+", Publisher: "+output[3])
+    # text output
+    # await ctx.send("Title: "+output[0]+", Console: "+output[1]+", Genre: "+output[2]+", Publisher: "+output[3])
+    # embed
+    embed = discord.Embed(colour = discord.Colour.blue())
+    embed.set_author(name="Game Information")
+    embed.add_field(name='Title: '+output[0], value="Console: "+output[1]+"\n Genre: "+output[2]+"\n Publisher: "+output[3])
+    await ctx.send(embed=embed)
   else:
     await ctx.send("Missing game name")
 # end of game cmd
