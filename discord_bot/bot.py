@@ -5,7 +5,8 @@
 ########################################################################################################
 # imports
 import os # for the token 
-import discord # pip install -U discord.py
+import discord
+from discord import colour # pip install -U discord.py
 from discord.ext import commands
 from dotenv import load_dotenv # $ pip install -U python-dotenv
 import random
@@ -26,37 +27,73 @@ async def on_ready():
 @client.command(pass_context=True)
 async def help(ctx):
   # color of the left bar
-  embed = discord.Embed(
-    colour = discord.Colour.dark_teal()
-  )
+  embed = discord.Embed(colour = discord.Colour.dark_teal())
   # contents of the embed
   embed.set_author(name='Commands:')
-  embed.add_field(name='Command: !game \'[game name]\' [optional console]', value='Returns: title, console, genre, publisher\nMore Info: Without specifying a console itll return the first one it sees. Game must be wrapped with \'\' and lowercase. This command is for search specific games that you know is formatted correctly, if you are unsure of the format of the game name or would rather have partial matches see !matchsearchgame.', inline=False)
+  embed.add_field(name='!game \'[game name]\' [optional console]', value='Returns: title, console, genre, total sold\nMore Info: Without specifying a console itll return the first one it sees. Game must be wrapped with \'\' and lowercase. This command is for search specific games that you know is formatted correctly, if you are unsure of the format of the game name or would rather have partial matches see !searchgames.', inline=False)
+  embed.add_field(name='!extendedgame \'[game name]\' [optional console]', value='Returns: title, console, genre, publisher, developer, total sold, release date, last update\nMore Info: Without specifying a console itll return the first one it sees. Game must be wrapped with \'\' and lowercase. This command is for search specific games that you know is formatted correctly, if you are unsure of the format of the game name or would rather have partial matches see !matchsearchgame.', inline=False)
+  embed.add_field(name='!searchgames \'[keywords]\'', value='Returns: title, console, genre, total sold of all games matched\nMore Info: Game must be wrapped with \'\' and lowercase. This will print out all matches as individual messages, beware of spam.', inline=False)
+  # footer
+  embed.set_footer(text="Disclaimer: results of 'unknown', -1, or empty cover art's may appear as the information isnt available.")
   
   # send a message about cmds
   await ctx.send(embed=embed)
-# end of
-# help
-
+# end of help
 ########################################################################################################
 # Commands
-# !game [game_name][opt console] -> details about the game, like: title, console, genre, publisher
+# !game [game_name][opt console] -> details about the game, like: title, console, genre, total sold
 @client.command()
 async def game(ctx, *args):
   # check if we got args
   if args:
     output = cmd.get_game(args)
-    # text output
-    # await ctx.send("Title: "+output[0]+", Console: "+output[1]+", Genre: "+output[2]+", Publisher: "+output[3])
-    # embed
     embed = discord.Embed(colour = discord.Colour.blue())
     embed.set_author(name="Game Information")
-    embed.add_field(name='Title: '+output[0], value="Console: "+output[1]+"\n Genre: "+output[2]+"\n Publisher: "+output[3])
+    if output[3] == -1:
+      embed.add_field(name='Title: {0}'.format(output[0]),  value="Console: {0}\n Genre: {1}\nTotal Sold: {2} million".format(output[1], output[2], output[4]))
+    else:
+      embed.add_field(name='Title: {0}'.format(output[0]),  value="Console: {0}\n Genre: {1}\nTotal Sold: {2} million".format(output[1], output[2], output[3]))
     await ctx.send(embed=embed)
   else:
     await ctx.send("Missing game name")
 # end of game cmd
 
+# !extendedgame [game_name] -> title, console, genre, publisher, developer, total sold, release date, last update
+@client.command()
+async def extendedgame(ctx, *args):
+  # check if we got args
+  if args:
+    output = cmd.get_extendedgame(args)
+    embed = discord.Embed(colour = discord.Colour.dark_blue())
+    embed.set_author(name="Extended Game Information")
+    if output[5] == -1:
+      embed.add_field(name='Title: {0}'.format(output[0]), value="Console: {0}\nGenre: {1}\nPublisher: {2}\nDeveloper: {3}\nTotal Sold Copys Per Console: {4} million\nRelease Date: {5}\nLast Update: {6}".format(output[1],output[2],output[3],output[4],output[6],output[7],output[8]))
+    else:
+      embed.add_field(name='Title: {0}'.format(output[0]), value="Console: {0}\nGenre: {1}\nPublisher: {2}\nDeveloper: {3}\nTotal Sold Copys Per Console: {4} million\nRelease Date: {5}\nLast Update: {6}".format(output[1],output[2],output[3],output[4],output[5],output[7],output[8]))
+    await ctx.send(embed=embed)
+  else:
+    await ctx.send("Missing game name")
+# end of extendedgame function
+
+# !searchgames [keyword] -> all game titles that match that keyword
+@client.command()
+async def searchgames(ctx, *args):
+  if args:
+    output = cmd.get_searchgames(args)  
+    # loop through the possible games
+    for i in range(len(output)):
+      # load message
+      embed = discord.Embed(colour = discord.Colour.dark_red())
+      if output[3] == -1:
+        embed.add_field(name='Title: {0}'.format(output[i][0]),  value="Console: {0}\n Genre: {1}\nTotal Sold: {2} million".format(output[i][1], output[i][2], output[i][4]))
+      else:
+        embed.add_field(name='Title: {0}'.format(output[i][0]),  value="Console: {0}\n Genre: {1}\nTotal Sold: {2} million".format(output[i][1], output[i][2], output[i][3]))
+
+      # send message
+      await ctx.send(embed=embed)
+  else:
+    await ctx.send("Missing game name")
+# end of searchgames function
 
 ########################################################################################################
 # get discord token
@@ -64,17 +101,16 @@ load_dotenv()
 client.run(os.getenv('TOKEN'))
 
 # To do list in order:
-# !game [game_name][opt console] -> details about the game, like: title, console, genre, publisher
-# !extendedgame [game_name] -> title, console, genre, publisher, developer, release date, last update
-# !allgames [keyword] -> all game titles that match that keyword
+# !game [game_name][opt console] -> details about the game, like: title, console, genre, publisher | CHECK
+# !extendedgame [game_name] -> title, console, genre, publisher, developer, release date, last update | CHECK
+# !searchgames [keyword] -> all game titles that match that keyword | CHECK
+# !searchpublishers [keyword] -> all publishers titles that match that keyword
+# !searchdevelopers [keyword] -> all developers titles that match that keyword
 # !sales [game_name] -> sale info of the game
 # !coverart [game] -> coverart of the game
 # !moreinfo [game] -> link the wiki  of the game
 # !devsearch [keyword] -> games by a dev
 # !publishersearch [keyword] -> games by the publisher
-# !matchsearchgame [game] -> match part of the game name to games
-# !matchsearchpublisher
-# !matchsearchdeveloper
 # !releasedatesearch [date1][date2] -> games between those dates
 # !lastupdatedatesearch [date1][date2] -> games between those dates
 # !topscore [optional num] -> games above this number, otherwise just the top games
