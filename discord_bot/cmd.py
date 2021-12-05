@@ -9,6 +9,8 @@ import sqlite3
 from sqlite3 import Error
 import random
 import os.path
+import matplotlib.pyplot as plt
+import numpy as np
 ########################################################################################################
 # connect to the db
 def create_connection(db_file):
@@ -73,10 +75,16 @@ def get_game(args):
 
     # do the sql query
     if len(console) == 2: # because console will always have '' in it
-        cur.execute("""SELECT title, console, genre, total_sales, total_shipped FROM games INNER JOIN stats on games.idx = stats.idx WHERE title LIKE %s""" % game)
+        try:
+            cur.execute("""SELECT title, console, genre, total_sales, total_shipped FROM games INNER JOIN stats on games.idx = stats.idx WHERE title LIKE %s""" % game)
+        except Exception:
+            return -1
     else:
         # we got a console
-        cur.execute("""SELECT title, console, genre, total_sales, total_shipped FROM games INNER JOIN stats on games.idx = stats.idx WHERE title LIKE %s AND console LIKE %s""" % (game, console) )
+        try:
+            cur.execute("""SELECT title, console, genre, total_sales, total_shipped FROM games INNER JOIN stats on games.idx = stats.idx WHERE title LIKE %s AND console LIKE %s""" % (game, console) )
+        except Exception:
+            return -1
     # get the query results
     retstring = cur.fetchone()
 
@@ -134,11 +142,16 @@ def get_extendedgame(args):
 
     # do the sql query
     if len(console) == 2: # because console will always have '' in it
-        cur.execute("""SELECT title, console, genre, publisher, developer, total_sales, total_shipped, release_date, critic_score FROM games INNER JOIN stats on games.idx = stats.idx WHERE title LIKE %s""" % game)
+        try:
+            cur.execute("""SELECT title, console, genre, publisher, developer, total_sales, total_shipped, release_date, critic_score FROM games INNER JOIN stats on games.idx = stats.idx WHERE title LIKE %s""" % game)
+        except Exception:
+            return -1
     else:
         # we got a console
-        cur.execute("""SELECT title, console, genre, publisher, developer, total_sales, total_shipped, release_date, last_update FROM games INNER JOIN stats on games.idx = stats.idx WHERE title=%s AND console=%s""" % (game, console) )
-    
+        try:
+            cur.execute("""SELECT title, console, genre, publisher, developer, total_sales, total_shipped, release_date, last_update FROM games INNER JOIN stats on games.idx = stats.idx WHERE title=%s AND console=%s""" % (game, console) )
+        except Exception:
+            return -1
     # get the query results
     retstring = cur.fetchone()
 
@@ -194,7 +207,7 @@ def get_searchgames(args):
     retstring = []
     
     # get 10 random results
-    if(len(allmatch) >= 12):
+    if(len(allmatch) > 12):
         store_int = []
         for i in range(12):
             # get random game from the list
@@ -261,7 +274,7 @@ def get_searchpublisher(args):
     retstring = []
     
     # get 10 random results
-    if(len(allmatch) >= 12):
+    if(len(allmatch) > 12):
         store_int = []
         for i in range(12):
             # get random game from the list
@@ -328,7 +341,7 @@ def get_searchdevelopers(args):
     retstring = []
     
     # get 10 random results
-    if(len(allmatch) >= 12):
+    if(len(allmatch) > 12):
         store_int = []
         for i in range(12):
             # get random game from the list
@@ -479,7 +492,7 @@ def get_randomgame():
     cur = dbcon.cursor()
     
     # do the query
-    cur.execute("""SELECT title, console, genre, publisher, total_sales, total_shipped, critic_score, wiki_page, img FROM games INNER JOIN stats INNER JOIN wiki ON games.idx = stats.idx = wiki.idx WHERE games.idx = {0}""".format(randidx))
+    cur.execute("""SELECT title, console, genre, publisher, total_sales, total_shipped, critic_score, img FROM games JOIN stats JOIN wiki ON games.idx = stats.idx AND games.idx = wiki.idx WHERE games.idx = {0}""".format(randidx))
     
     # get the query results
     retstring = cur.fetchone()
@@ -490,13 +503,109 @@ def get_randomgame():
     return retstring
 # endof get_randomgame
 ########################################################################################################
+# !releasedatesearch [date1][date2] -> games between those dates
+def get_searchreleasedate(args):
+    d1 = args[0]
+    d2 = args[1]
+    cur = dbcon.cursor()
+    cur.execute("""SELECT title, console, genre, total_sales, total_shipped, release_date FROM games INNER JOIN stats ON games.idx = stats.idx WHERE release_date >= '{0}' AND release_date <= '{1}'""".format(d1, d2))
+    allmatch = cur.fetchall()
 
+    # see if there are more than 12 games
+    if(len(allmatch) > 12):
+        retstring = []
+        store_int = []
+        for i in range(12):
+            random_game = random.randint(0, len(allmatch) - 1)
+            if random_game not in store_int:
+                store_int.append(random_game)
+                retstring.append(allmatch[random_game])
+            else:
+                i -= 1
+        return retstring
+    # end of 2nd if
+    else:
+        return allmatch
+# end of get_searchreleasedate
 ########################################################################################################
+# !searchlastupdatedate [date1][date2] -> games between those dates
+def get_searchlastupdate(args):
+    d1 = args[0]
+    d2 = args[1]
+    cur = dbcon.cursor()
+    cur.execute("""SELECT title, console, genre, total_sales, total_shipped, last_update FROM games INNER JOIN stats ON games.idx = stats.idx WHERE release_date >= '{0}' AND release_date <= '{1}'""".format(d1, d2))
+    allmatch = cur.fetchall()
 
+    # see if there are more than 12 games
+    if(len(allmatch) > 12):
+        retstring = []
+        store_int = []
+        for i in range(12):
+            random_game = random.randint(0, len(allmatch) - 1)
+            if random_game not in store_int:
+                store_int.append(random_game)
+                retstring.append(allmatch[random_game])
+            else:
+                i -= 1
+        return retstring
+    # end of 2nd if
+    else:
+        return allmatch
+# end of get_searchlastupdate
 ########################################################################################################
-
+# !topscore -> games above this number, otherwise just the top games
+def get_topscore():
+    cur = dbcon.cursor()
+    cur.execute("""SELECT title, console, genre, total_sales, total_shipped, max(critic_score) FROM games INNER JOIN stats ON games.idx = stats.idx GROUP BY title HAVING max(critic_score) = 10""")
+    allmatch = cur.fetchall()
+    retlist = []
+    for i in range(12):
+        retlist.append(allmatch[i])
+    return retlist
+# end of get_topscore
 ########################################################################################################
-
+# !bottomscore [opt num] -> bottom games below this num or just bottom gamees
+def get_bottomscore(args):
+    if args:
+        cur = dbcon.cursor()
+        tmp = int(args[0]) - 1
+        cur.execute("""SELECT title, console, genre, total_sales, total_shipped, max(critic_score) FROM games INNER JOIN stats ON games.idx = stats.idx GROUP BY title HAVING critic_score <= {0}  AND critic_score >= {1}""".format(args[0], tmp))
+        allmatch = cur.fetchall()
+        retlist = []
+        if len(allmatch) > 12:
+            for i in range(12):
+                retlist.append(allmatch[i])
+            return retlist
+        else:
+            return allmatch
+    else:
+        cur = dbcon.cursor()
+        cur.execute("""SELECT title, console, genre, total_sales, total_shipped, min(critic_score) FROM games INNER JOIN stats ON games.idx = stats.idx GROUP BY title HAVING critic_score >= 0 AND critic_score <= 2""")
+        allmatch = cur.fetchall()
+        retlist = []
+        for i in range(12):
+            retlist.append(allmatch[i])
+        return retlist
+        
+# end of bottom score
 ########################################################################################################
-
+# graph for genre
+def get_genregraph():
+    cur = dbcon.cursor()
+    
+    cur.execute("""SELECT genre, count(genre) FROM games GROUP BY genre""")
+    
+    allmatch = cur.fetchall() # get all matches
+    return allmatch
+# end of genre graph
+########################################################################################################
+# graph for console
+def get_consolegraph():
+    cur = dbcon.cursor()
+    
+    cur.execute("""SELECT console, count(console) FROM games GROUP BY console""")
+    
+    allmatch = cur.fetchall() # get all matches
+    return allmatch
+# end of console graph
 ########################################################################################################
