@@ -1,4 +1,4 @@
-# Game Sales Discord Bot
+# Game Info Discord Bot
 
 
 
