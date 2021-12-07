@@ -366,10 +366,11 @@ async def genregraph(ctx):
   
   plt.title('Genre Graph')
   plt.tight_layout()
-  plt.savefig('graph.png')
-  
+  plt.savefig('genregraph.png')
+
   # output
-  await ctx.send(file=discord.File('graph.png'))
+  await ctx.send(file=discord.File('genregraph.png'))
+  plt.close('all')
 # end of function
 
 # graph of games sold by console
@@ -388,12 +389,6 @@ async def consolegraph(ctx):
       pointlist.append(output[i][1])
   # end of i
   
-  # swap some values around so output isnt terrible
-  def swapPositions(list, pos1, pos2):
-    list[pos1], list[pos2] = list[pos2], list[pos1]
-    return list
-  # end of swap function
-  
   # add % onto the label
   newlabels = [f'{labels[i]} {int(round(pointlist[i]/sum(pointlist)*100))}%' for i in range(len(labels))]
 
@@ -401,10 +396,11 @@ async def consolegraph(ctx):
 
   plt.title('Console Graph', loc='left')
   plt.tight_layout()
-  plt.savefig('graph.png')
+  plt.savefig('consolegraph.png')
   
   # output
-  await ctx.send(file=discord.File('graph.png'))
+  await ctx.send(file=discord.File('consolegraph.png'))
+  plt.close('all')
 # end of function
 
 ########################################################################################################
