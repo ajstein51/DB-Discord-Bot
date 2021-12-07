@@ -9,8 +9,6 @@ import sqlite3
 from sqlite3 import Error
 import random
 import os.path
-import matplotlib.pyplot as plt
-import numpy as np
 ########################################################################################################
 # connect to the db
 def create_connection(db_file):

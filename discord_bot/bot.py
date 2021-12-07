@@ -411,21 +411,3 @@ async def consolegraph(ctx):
 # get discord token
 load_dotenv()
 client.run(os.getenv('TOKEN'))
-
-# To do list in order:
-# !game [game_name][opt console] -> details about the game, like: title, console, genre, publisher | CHECK
-# !extendedgame [game_name] -> title, console, genre, publisher, developer, release date, last update | CHECK
-# !searchgames [keyword] -> all game titles that match that keyword | CHECK
-# !searchpublishers [keyword] -> all publishers titles that match that keyword, 10 random games | CHECK
-# !searchdevelopers [keyword] -> all developers titles that match that keyword, 10 random games | CHECK
-# !sales [game_name] -> all sale info of the game | CHECK
-# !coverart [game] -> coverart of the game | CHECK
-# !randomgame -> give a random game and its info, title, genre, publisher, total sold/shipped, wiki, cover art, score | CHECK
-# !releasedatesearch [date1][date2] -> games between those dates | CHECK
-# !lastupdatedatesearch [date1][date2] -> games between those dates | CHECK
-# !topscore [optional num] -> games above this number, otherwise just the top games | CHECK
-# !bottomscore [opt num] -> bottom games below this num or just bottom gamees | CHECK
-# graph of top sold games by console  | CHECK
-# graph of top sold games by genre | CHECK
-# !moreinfo [game] -> link the wiki  of the game 
-# !salessearch [number][optional region] -> give total number above x num unless opt region isnt null
